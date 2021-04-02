@@ -1,0 +1,99 @@
+version: '3'
+
+services:
+  mariadb:
+    image: mariadb
+    container_name: mariadb
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    restart: always
+    volumes:
+      - mariadb:/var/lib/mysql
+    env_file:
+      - db.env
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    environment:
+      - VIRTUAL_HOST=
+      - PMA_HOST=mariadb
+    depends_on:
+      - mariadb
+    networks:
+      - proxy-tier
+
+  nextcloud:
+    image: binhnv56/nextcloud
+    container_name: nextcloud
+    restart: always
+    volumes:
+      - nextcloud:/var/www/html
+    environment:
+      - VIRTUAL_HOST=
+      - LETSENCRYPT_HOST=
+      - LETSENCRYPT_EMAIL=
+      - MYSQL_HOST=mariadb
+    env_file:
+      - db.env
+    depends_on:
+      - mariadb
+    networks:
+      - proxy-tier
+      - default
+
+  collabora:
+    image: binhnv56/collabora
+    container_name: collabora
+    restart: always
+    environment:
+      - VIRTUAL_HOST=
+      - LETSENCRYPT_HOST=
+      - LETSENCRYPT_EMAIL=
+      - domain=
+      - username=admin
+      - password=admin
+      - extra_params=--o:user_interface.mode=classic
+    # - extra_params=--o:ssl.enable=false --o:ssl.termination=false --o:user_interface.mode=classic # without ssl
+    networks:
+      - proxy-tier
+
+  proxy:
+    build: ./proxy
+    container_name: proxy
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    labels:
+      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
+    volumes:
+      - certs:/etc/nginx/certs:ro
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - proxy-tier
+
+  letsencrypt-companion:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    restart: always
+    volumes:
+      - certs:/etc/nginx/certs
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy-tier
+    depends_on:
+      - proxy
+
+volumes:
+  mariadb:
+  nextcloud:
+  certs:
+  vhost.d:
+  html:
+
+networks:
+  proxy-tier:
