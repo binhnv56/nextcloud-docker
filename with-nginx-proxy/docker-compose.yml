@@ -19,6 +19,8 @@ services:
     restart: always
     environment:
       - VIRTUAL_HOST=
+      - LETSENCRYPT_HOST=
+      - LETSENCRYPT_EMAIL=
       - PMA_HOST=mariadb
     depends_on:
       - mariadb
@@ -50,6 +52,9 @@ services:
     restart: always
     environment:
       - VIRTUAL_HOST=
+      - VIRTUAL_PROTO=https
+      - RESOLVE_TO_PROXY_IP=true
+      - SLEEPFORDEBUGGER=0
       - LETSENCRYPT_HOST=
       - LETSENCRYPT_EMAIL=
       - domain=
