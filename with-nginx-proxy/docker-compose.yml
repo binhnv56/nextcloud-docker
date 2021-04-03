@@ -52,11 +52,11 @@ services:
     restart: always
     environment:
       - VIRTUAL_HOST=
+      - LETSENCRYPT_HOST=
+      - LETSENCRYPT_EMAIL=
       - VIRTUAL_PROTO=https
       - RESOLVE_TO_PROXY_IP=true
       - SLEEPFORDEBUGGER=0
-      - LETSENCRYPT_HOST=
-      - LETSENCRYPT_EMAIL=
       - domain=
       - username=admin
       - password=admin
@@ -84,12 +84,14 @@ services:
 
   letsencrypt-companion:
     image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: letsencrypt
     restart: always
     volumes:
       - certs:/etc/nginx/certs
       - vhost.d:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - acme:/etc/acme.sh
     networks:
       - proxy-tier
     depends_on:
