@@ -103,6 +103,7 @@ volumes:
   certs:
   vhost.d:
   html:
+  acme:
 
 networks:
   proxy-tier:
