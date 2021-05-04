@@ -10,9 +10,11 @@ RUN	\
 
 WORKDIR /usr/src/nextcloud
 
-RUN 	\
-	tx pull -l vi; \
-	php translationtool.phar convert-po-files;
+RUN tx pull -l vi;
+
+COPY translationtool.phar /usr/src/nextcloud/
+
+RUN php translationtool.phar convert-po-files;
 
 
 COPY *.sh upgrade.exclude /
